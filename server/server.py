@@ -4,17 +4,15 @@ import threading
 RANGES = [5, 15, 25, 35]
 
 clients = {}
-actuator_socket = None  # Actuator connection
-sensor_socket = None    # Sensor connection
+actuator_socket = None
+sensor_socket = None
 
-# Handling device connections
 def handle_client(client_socket, client_address):
     global actuator_socket, sensor_socket
     print(f"[NEW CONNECTION] {client_address} connected.")
-
     try:
         while True:
-            # Wait for a message from the client
+
             message = client_socket.recv(1024).decode('utf-8')
             if not message:
                 break
@@ -25,7 +23,6 @@ def handle_client(client_socket, client_address):
                 print(f"[SENSOR] Message received: {message}")
 
                 if message == "GET_RANGES":
-                    # Prepare and send ranges with a newline at the end
                     response = ','.join(map(str, RANGES)) + '\n'
                     client_socket.send(response.encode('utf-8'))
                     print(f"[SENSOR] Ranges sent: {response}")

@@ -20,23 +20,36 @@ public:
         : ssid(ssid), password(password), host(host), port(port), lastState(-1), sensor(triggerPin, echoPin) {}
 
     void connectToWiFi() {
-        WiFi.begin(ssid, password);
-        while (WiFi.status() != WL_CONNECTED) {
-            delay(1000);
-            Serial.println("Connecting to WiFi...");
-        }
-        Serial.println("Connected to WiFi");
+    WiFi.begin(ssid, password);
+    unsigned long startTime = millis();
+
+    while (WiFi.status() != WL_CONNECTED) {
+        delay(1000);
+        Serial.println("Connecting to WiFi...");
     }
 
+    unsigned long endTime = millis();
+    unsigned long connectionTime = endTime - startTime;
+    Serial.print("Connected to WiFi. Time taken: ");
+    Serial.print(connectionTime);
+    Serial.println(" ms");
+}
+
     bool connectToServer() {
-        if (client.connect(host, port)) {
-            Serial.println("Connected to server.");
-            return true;
-        } else {
-            Serial.println("Failed to connect to server.");
-            return false;
-        }
+    unsigned long startTime = millis();
+
+    if (client.connect(host, port)) {
+        unsigned long endTime = millis(); 
+        unsigned long connectionTime = endTime - startTime;
+        Serial.print("Connected to server. Time taken: ");
+        Serial.print(connectionTime);
+        Serial.println(" ms");
+        return true;
+    } else {
+        Serial.println("Failed to connect to server.");
+        return false;
     }
+}
 
     void requestRanges() {
         if (client.connected()) {
@@ -68,19 +81,30 @@ public:
     }
 
     void sendData() {
-        int distance = sensor.readDistanceInCM();
-        int newState = calculateState(distance);
+    unsigned long startTime = millis();
+    float distance = sensor.readDistanceInCM();
+    int newState = calculateState(distance);
 
-        if (newState != lastState) {
-            if (client.connected()) {
-                client.println(newState); 
-                Serial.println("State sent: " + String(newState));
-                lastState = newState;
-            } else {
-                Serial.println("Not connected to server to send state.");
-            }
+    unsigned long endTime = millis();
+    unsigned long readTime = endTime - startTime;
+
+    Serial.print("Distance: ");
+    Serial.print(distance);
+    Serial.print(" cm, Time taken: ");
+    Serial.print(readTime);
+    Serial.println(" ms");
+
+    if (newState != lastState) {
+        if (client.connected()) {
+            client.println(newState);
+            Serial.println("State sent: " + String(newState));
+            lastState = newState;
+        } else {
+            Serial.println("Not connected to server to send state.");
         }
     }
+}
+
 
     void handleConnections() {
         if (!client.connected()) {
