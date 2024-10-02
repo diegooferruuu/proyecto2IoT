@@ -1,10 +1,8 @@
 import socket
 import threading
 
-# Predefined range vector
-RANGES = [50, 5, 15, 25, 35]
+RANGES = [5, 15, 25, 35]
 
-# Dictionary to store connections
 clients = {}
 actuator_socket = None  # Actuator connection
 sensor_socket = None    # Sensor connection
@@ -21,19 +19,17 @@ def handle_client(client_socket, client_address):
             if not message:
                 break
 
-            # Identify if the client is the sensor or the actuator
             if client_socket == actuator_socket:
                 print(f"[ACTUATOR] Message received: {message}")
             elif client_socket == sensor_socket:
                 print(f"[SENSOR] Message received: {message}")
 
-                # If the message is GET_RANGES, return the predefined ranges
                 if message == "GET_RANGES":
-                    response = ','.join(map(str, RANGES))
+                    # Prepare and send ranges with a newline at the end
+                    response = ','.join(map(str, RANGES)) + '\n'
                     client_socket.send(response.encode('utf-8'))
                     print(f"[SENSOR] Ranges sent: {response}")
                 else:
-                    # If the sensor sends any other message, forward it to the actuator
                     if actuator_socket:
                         print(f"[FORWARD] Sending message to actuator: {message}")
                         actuator_socket.send(message.encode('utf-8'))
@@ -49,7 +45,6 @@ def handle_client(client_socket, client_address):
         elif client_socket == sensor_socket:
             sensor_socket = None
             print("[SENSOR DISCONNECTED]")
-
 
 # Start the server and accept multiple connections
 def start_server():
@@ -75,7 +70,6 @@ def start_server():
         # Launch a thread to handle the new connection
         client_handler = threading.Thread(target=handle_client, args=(client_socket, client_address))
         client_handler.start()
-
 
 if __name__ == "__main__":
     start_server()
