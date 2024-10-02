@@ -1,9 +1,5 @@
-#ifndef ACTUATORESP32_H
-#define ACTUATORESP32_H
-
 #include <WiFi.h>
 #include <WiFiClient.h>
-#include "LedController.h"
 
 class ActuatorESP32 {
 private:
@@ -13,19 +9,43 @@ private:
     int serverPort;
     int lastNumber;
     WiFiClient client;
-    LedController ledController;
+    int ledPins[4];
 
 public:
     ActuatorESP32(const char* ssid, const char* password, const char* serverIP, int serverPort, int pin1, int pin2, int pin3, int pin4)
-        : ssid(ssid), password(password), serverIP(serverIP), serverPort(serverPort), lastNumber(-1), ledController(pin1, pin2, pin3, pin4) {}
+        : ssid(ssid), password(password), serverIP(serverIP), serverPort(serverPort), lastNumber(-1), ledPins{pin1, pin2, pin3, pin4} {}
 
     void setup() {
         Serial.begin(115200);
-        ledController.initialize();
-
+        initializeLedPins();
         connectToWiFi();
         connectToServer();
     }
+
+    void initializeLedPins() {
+        for (int i = 0; i < 4; i++) {
+            pinMode(ledPins[i], OUTPUT);
+            digitalWrite(ledPins[i], LOW);
+        }
+    }
+
+    void turnOnLeds(int num){
+        if (num == 0) {
+            for (int i = 0; i < 4; i++) {
+                digitalWrite(ledPins[i], LOW);
+            }
+        } else {
+            for (int i = 0; i < 4; i++) {
+                if (i <= (4 - num)) {
+                    digitalWrite(ledPins[i], HIGH);
+                } else {
+                    digitalWrite(ledPins[i], LOW);
+                }
+            }
+        }
+    }
+
+    
 
     void loop() {
         if (client.connected()) {
@@ -36,7 +56,7 @@ public:
                 if (receivedNumber != lastNumber) {
                     Serial.print("Number received: ");
                     Serial.println(receivedNumber);
-                    ledController.turnOnLeds(receivedNumber);
+                    turnOnLeds(receivedNumber);
                     lastNumber = receivedNumber;
                 }
             }
@@ -71,5 +91,3 @@ private:
         }
     }
 };
-
-#endif
